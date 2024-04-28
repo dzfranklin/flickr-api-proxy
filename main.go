@@ -52,6 +52,12 @@ var mu sync.Mutex
 var lastReq time.Time
 
 func handler(w http.ResponseWriter, r *http.Request) {
+	if r.URL.Path == "/healthz" {
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write([]byte("OK from flickr-api-proxy"))
+		return
+	}
+
 	ctx := r.Context()
 	log.Printf("Request from %s for %s?%s", r.RemoteAddr, r.URL.Path, r.URL.RawQuery)
 

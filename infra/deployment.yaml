@@ -1,0 +1,52 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: server
+  namespace: flickr-api-proxy
+  labels:
+    app: server
+  annotations:
+    tailscale.com/expose: "true"
+    tailscale.com/hostname: "flickr-api-proxy"
+spec:
+  type: ClusterIP
+  selector:
+    app: server
+  ports:
+    - name: http
+      protocol: TCP
+      port: 80
+      targetPort: http
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: server
+  namespace: flickr-api-proxy
+  labels:
+    app: server
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: server
+  template:
+    metadata:
+      name: server
+      namespace: flickr-api-proxy
+      labels:
+        app: server
+    spec:
+      containers:
+        - name: server
+          image: ghcr.io/dzfranklin/flickr-api-proxy:latest
+          ports:
+            - name: http
+              containerPort: 8080
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+          env:
+            - name: REDIS_ADDR
+              value: "redis-0.default:6379"
